@@ -7,7 +7,11 @@ description: "Contribute — share session learnings to the team knowledge base"
 
 Summarize what this AI coding session learned and push it to the team knowledge base.
 
-**Write the document in the team's shared knowledge-base language if one is established (check existing files under `learnings/` for the prevailing language); otherwise use the same language as this conversation.**
+**Choose the document's language in this order:**
+
+1. An explicit language policy for `learnings/` stated in this request or in the repo's own instructions (AGENTS.md, CLAUDE.md, contributing docs).
+2. The language of the current request/conversation.
+3. The prevailing language of existing files under `learnings/`, treated only as a weak fallback signal — not proof of team policy. A past forced-language default can produce a skewed majority that doesn't reflect what the team actually wants going forward, so don't let a numeric majority override 1 or 2.
 
 ## When to Use
 
@@ -81,7 +85,7 @@ teamai contribute --file /tmp/session-summary.md --title "K8s pod startup timeou
 
 ## Important
 
-- Run this as a **sub-agent** (Agent tool) to avoid polluting the main session's context
+- Run this as a **sub-agent** (Agent tool) to avoid polluting the main session's context. A fresh sub-agent does not inherit the parent conversation — when delegating, pass it explicitly: the chosen document language, the confirmed facts/decisions/verified results to write up (not unverified guesses), and the scope to cover. Don't let the sub-agent infer any of these on its own.
 - The document is pushed to the team repo's `teamai-learnings` branch, under `learnings/`, with no pull request
 - Team members will see it on their next `teamai pull`
 - Keep summaries concise and actionable — this is a knowledge base, not a diary
