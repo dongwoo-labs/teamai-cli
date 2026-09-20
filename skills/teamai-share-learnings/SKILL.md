@@ -1,13 +1,13 @@
 ---
 name: teamai-share-learnings
-description: "Contribute — 分享 Session 经验到团队知识库"
+description: "Contribute — share session learnings to the team knowledge base"
 ---
 
-# Contribute — 分享 Session 经验到团队知识库
+# Contribute — share session learnings to the team knowledge base
 
-总结本次 AI 编码 session 中学到的经验，推送到团队知识库。
+Summarize what this AI coding session learned and push it to the team knowledge base.
 
-**【重要】所有生成的文档必须使用中文撰写。**
+**Write the document in the team's shared knowledge-base language if one is established (check existing files under `learnings/` for the prevailing language); otherwise use the same language as this conversation.**
 
 ## When to Use
 
@@ -18,65 +18,65 @@ description: "Contribute — 分享 Session 经验到团队知识库"
 
 ## How It Works
 
-1. **总结**：回顾本次 session 的工具使用、解决的问题、发现的模式
-2. **生成文档**：用中文撰写 Markdown 文档，涵盖：
-   - 任务/问题是什么
-   - 关键决策及原因
-   - 解决方案、变通方法或发现的模式
-   - 哪些工具/skill 特别有用
-   - 踩坑点和注意事项
-3. **保存临时文件**：写入临时文件
-4. **推送到团队**：运行 `teamai contribute --file <path> --title "<title>"`
+1. **Summarize**: review this session's tool usage, the problem solved, and any patterns discovered
+2. **Generate the document**: write a Markdown document covering:
+   - What the task/problem was
+   - Key decisions and why
+   - The solution, workaround, or pattern discovered
+   - Which tools/skills were especially useful
+   - Pitfalls and things to watch out for
+3. **Save to a temp file**: write it to a temporary file
+4. **Push to the team**: run `teamai contribute --file <path> --title "<title>"`
 
 ## Document Template
 
-**【必须】文档必须包含 YAML frontmatter，用于搜索索引和知识发现。**
+**The document must include YAML frontmatter, used for search indexing and knowledge discovery.**
 
 ```markdown
 ---
-title: "<简短标题，描述核心问题或发现>"
+title: "<short title describing the core problem or finding>"
 author: <username>
 date: <YYYY-MM-DD>
 tags: [tag1, tag2, tag3]
 ---
 
-## 背景
-在做什么？遇到了什么问题？
+## Background
+What were you doing? What problem did you run into?
 
-## 解决方案
-怎么解决的？关键步骤是什么？
+## Solution
+How was it solved? What were the key steps?
 
-## 经验总结
-- 经验 1
-- 经验 2
+## Takeaways
+- Takeaway 1
+- Takeaway 2
 
-## 相关 Skills
+## Related Skills
 - skill-name-1
 - skill-name-2
 ```
 
-### Frontmatter 字段说明
+### Frontmatter fields
 
-| 字段 | 必须 | 说明 | 示例 |
+| Field | Required | Description | Example |
 |------|------|------|------|
-| title | ✅ | 简短标题（<60 字符） | "K8s Pod OOM 排查指南" |
-| author | ✅ | 贡献者用户名 | jeffyxu |
-| date | ✅ | 日期 YYYY-MM-DD | 2026-03-28 |
-| tags | ✅ | 2-5 个关键标签 | [k8s, oom, troubleshooting] |
+| title | ✅ | Short title (<60 chars) | "K8s Pod OOM troubleshooting guide" |
+| author | ✅ | Contributor username | jeffyxu |
+| date | ✅ | Date, YYYY-MM-DD | 2026-03-28 |
+| tags | ✅ | 2-5 key tags | [k8s, oom, troubleshooting] |
 
-### Tags 选择建议
+### Choosing tags
 
-从以下类别中选择 2-5 个：
-- **技术栈**: python, typescript, go, k8s, docker, sglang, cuda
-- **问题类型**: troubleshooting, performance, deployment, config, api
-- **模式**: workflow, pattern, tool-usage, best-practice
-- **场景**: debugging, testing, monitoring, security
+Pick 2-5 from these categories:
+- **Tech stack**: python, typescript, go, k8s, docker, sglang, cuda
+- **Problem type**: troubleshooting, performance, deployment, config, api
+- **Pattern**: workflow, pattern, tool-usage, best-practice
+- **Scenario**: debugging, testing, monitoring, security
 
 ## Example
 
 ```bash
-# AI 生成总结文档到 /tmp/session-summary.md 后
-teamai contribute --file /tmp/session-summary.md --title "K8s pod 启动超时排查"
+# After the AI generates the summary doc at /tmp/session-summary.md
+teamai contribute --file /tmp/session-summary.md --title "K8s pod startup timeout troubleshooting"
 ```
 
 ## Important
