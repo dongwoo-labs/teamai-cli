@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +20,46 @@ import { askConfirmation } from './utils/prompt.js';
 // for backwards compatibility with existing callers of `./update.js`.
 import { getCurrentVersion, getCurrentPackageName } from './package-info.js';
 export { getCurrentVersion, getCurrentPackageName };
+
+/**
+ * A `teamaiUpdateSource` field in package.json (absent on a normal install)
+ * makes `teamai update` run `git pull && npm run build && npm install -g .`
+ * in the local fork checkout instead of reinstalling from the npm registry.
+ * Reads package.json directly (same path literal as package-info.ts's
+ * loadPackageJson, kept independent rather than exported/shared for a
+ * single caller).
+ */
+function isGitUpdateSource(): boolean {
+  const require = createRequire(import.meta.url);
+  const pkg = require('../package.json') as { teamaiUpdateSource?: { type?: string } };
+  return pkg.teamaiUpdateSource?.type === 'git';
+}
+
+/** `git pull && npm run build && npm install -g .`, run in the fork root. */
+async function doGitUpdate(): Promise<void> {
+  const entry = resolveTeamaiEntryScript();
+  const root = entry && path.dirname(path.dirname(entry));
+  if (!root) {
+    log.warn('Could not resolve the local fork checkout — update manually.');
+    return;
+  }
+  const locked = await acquireLock();
+  if (!locked) {
+    log.warn('Another update is in progress, skipping');
+    return;
+  }
+  const npm = resolveNpmCommand();
+  try {
+    await execFileAsync('git', ['-C', root, 'pull'], { timeout: INSTALL_TIMEOUT, windowsHide: true });
+    await execFileAsync(npm.cmd, [...npm.args, 'run', 'build'], { cwd: root, timeout: INSTALL_TIMEOUT, windowsHide: true });
+    await execFileAsync(npm.cmd, [...npm.args, 'install', '-g', '.'], { cwd: root, timeout: INSTALL_TIMEOUT, windowsHide: true });
+    log.success(`Updated teamai from ${root}`);
+  } catch (e) {
+    log.warn(`Update failed: ${(e as Error).message}. Run manually: git -C ${root} pull && npm run build && npm install -g .`);
+  } finally {
+    await releaseLock();
+  }
+}
 
 const execFileAsync = promisify(execFile);
 
@@ -448,6 +489,11 @@ export async function checkForUpdate(options?: { force?: boolean }): Promise<Che
  * Perform the actual update (check + install based on policy)
  */
 export async function doUpdate(): Promise<void> {
+  if (isGitUpdateSource()) {
+    await doGitUpdate();
+    return;
+  }
+
   const result = await checkForUpdate();
   if (!result.available) {
     log.info(`Already up to date (v${result.current})`);
