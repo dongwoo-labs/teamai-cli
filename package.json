@@ -6,6 +6,7 @@
   "bin": {
     "teamai": "dist/index.js"
   },
+  "teamaiUpdateSource": { "type": "git" },
   "files": [
     "dist/**/*.js",
     "skills",
