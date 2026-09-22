@@ -1,11 +1,12 @@
 {
-  "name": "teamai-cli",
+  "name": "teamai-cli-dongwoo-fork",
   "version": "0.22.0",
   "description": "TeamAI — Make Every Team AI Native (skill sync + shared knowledge base, powered by Git)",
   "type": "module",
   "bin": {
     "teamai": "dist/index.js"
   },
+  "teamaiUpdateSource": { "type": "git" },
   "files": [
     "dist/**/*.js",
     "skills",
