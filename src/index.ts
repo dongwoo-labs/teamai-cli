@@ -852,6 +852,7 @@ program
   .option('--title <title>', 'Title for the contribution document')
   .option('--session-id <id>', 'Session ID for dedup tracking')
   .option('--scope <scope>', 'Target scope: user or project')
+  .option('--tool <name>', 'Tool identifier for provenance (e.g. claude, codex)')
   .action(async (cmdOpts) => {
     const globalOpts = program.opts() as GlobalOptions;
     const { contribute } = await import('./contribute.js');

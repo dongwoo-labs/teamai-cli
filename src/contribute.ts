@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { requireInit, detectProjectConfig, loadLocalConfigForScope } from './config.js';
 import { assertNotReadOnly } from './read-only.js';
 import { pathExists } from './utils/fs.js';
@@ -9,8 +10,55 @@ import { pendingLearningsDir, savePendingLearning } from './utils/pending-learni
 import { publishQueuedLearnings } from './utils/learnings-publish.js';
 import { learningsRoots } from './utils/learnings-roots.js';
 import { isSafeNamespaceSegment, resolveActiveLearningsNamespaces } from './projects.js';
+import { splitFrontmatter, stringifyFrontmatter } from './utils/frontmatter.js';
+import { getHeadRev } from './utils/git.js';
 import type { GlobalOptions, LocalConfig } from './types.js';
 import { getDataHome, getReportsDir, isSelfMode } from './types.js';
+
+const require = createRequire(import.meta.url);
+const { version: teamaiVersion } = require('../package.json');
+
+/**
+ * Stamp CLI-computed provenance fields into the contribution's frontmatter,
+ * merged alongside whatever the model already wrote (title/author/date/tags).
+ * These fields are computed here — not asked of the model — because the CLI
+ * can derive them far more reliably than a prompted write.
+ */
+async function stampProvenance(
+  content: string,
+  localConfig: LocalConfig,
+  sessionId: string,
+  tool: string,
+): Promise<string> {
+  const { data, body } = splitFrontmatter(content);
+  const stamped: Record<string, unknown> = { ...data };
+  if (sessionId) stamped.session_id = sessionId;
+  stamped.tool = tool;
+  stamped.teamai_version = teamaiVersion;
+  // Neither HEAD lookup may fail the contribution: a single-repo business repo
+  // with no commits yet, or a workspace that isn't a git repo at all, are both
+  // real states this command already has to handle everywhere else.
+  try {
+    stamped.harness_head = await getHeadRev(localConfig.repo.localPath);
+  } catch {
+    // Team repo checkout has no commits yet — omit rather than fail the contribution.
+  }
+  try {
+    stamped.workspace_head = await getHeadRev(process.cwd());
+  } catch {
+    // cwd isn't a git repo (or has no commits) — omit rather than fail the contribution.
+  }
+  // Captured at stamping time; reading and stamping happen back-to-back so this
+  // is effectively file-read time too.
+  stamped.captured_at = new Date().toISOString();
+  return stringifyFrontmatter(stamped, body);
+}
+
+/** Best-effort tool/platform identifier when `--tool` wasn't passed. */
+function detectTool(): string {
+  if (process.env.CLAUDE_SESSION_ID) return 'claude';
+  return 'unknown';
+}
 
 /**
  * Decide which learnings subdirectory a contribution lands in — resolved from
@@ -125,7 +173,7 @@ function generateFilename(title?: string): string {
  * next `teamai pull` publishes it.
  */
 export async function contribute(
-  options: GlobalOptions & { file?: string; title?: string; sessionId?: string; scope?: string },
+  options: GlobalOptions & { file?: string; title?: string; sessionId?: string; scope?: string; tool?: string },
 ): Promise<void> {
   // Validate file
   if (!options.file) {
@@ -162,6 +210,12 @@ export async function contribute(
   }
   assertNotReadOnly(localConfig, 'teamai contribute');
   const username = localConfig.username;
+
+  // Computed once and reused for both the frontmatter stamp and markContributed()
+  // below, so the two never disagree on which session this contribution belongs to.
+  const sessionId = options.sessionId || process.env.CLAUDE_SESSION_ID || '';
+  const tool = options.tool || detectTool();
+  content = await stampProvenance(content, localConfig, sessionId, tool);
 
   const filename = generateFilename(options.title);
   // Route into an active-project subdir when there is exactly one, else the
@@ -220,7 +274,6 @@ export async function contribute(
   // it reaches origin: the queue always retries, and re-contributing the same
   // session would add a second copy of the same knowledge rather than fix
   // anything. `pull` and `doctor` are what tell the user it is still queued.
-  const sessionId = options.sessionId || process.env.CLAUDE_SESSION_ID || '';
   if (sessionId) {
     await markContributed(sessionId);
   }

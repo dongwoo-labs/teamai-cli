@@ -61,12 +61,27 @@ How was it solved? What were the key steps?
 
 ### Frontmatter fields
 
+Write only these four — `teamai contribute` stamps the rest automatically (see below).
+
 | Field | Required | Description | Example |
 |------|------|------|------|
 | title | ✅ | Short title (<60 chars) | "K8s Pod OOM troubleshooting guide" |
 | author | ✅ | Contributor username | jeffyxu |
 | date | ✅ | Date, YYYY-MM-DD | 2026-03-28 |
 | tags | ✅ | 2-5 key tags | [k8s, oom, troubleshooting] |
+
+### Provenance fields (added automatically — do not write these)
+
+`teamai contribute` merges these into the frontmatter after reading the file. The CLI derives them more reliably than a prompted write, so leave them out of the generated document:
+
+| Field | Description |
+|------|------|
+| session_id | Session ID for dedup tracking (omitted if not resolvable) |
+| tool | Tool/platform identifier (`--tool`, or a best-effort guess, or `unknown`) |
+| teamai_version | Version of the `teamai-cli` that ran the contribution |
+| harness_head | HEAD of the team repo checkout at contribution time |
+| workspace_head | HEAD of the workspace the command was run from (omitted if not a git repo) |
+| captured_at | ISO-8601 timestamp of when the fields were stamped |
 
 ### Choosing tags
 
