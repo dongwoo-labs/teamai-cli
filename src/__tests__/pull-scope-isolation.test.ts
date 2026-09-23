@@ -260,6 +260,18 @@ describe('pull scope isolation (issue #73)', () => {
     });
   });
 
+  it('passes --force through to the MCP reconcile so it can override a foreign entry', async () => {
+    vi.mocked(detectProjectConfig).mockResolvedValue(projectConfig);
+
+    await pull({ silent: true, force: true });
+
+    expect(reconcileMcpForConfig).toHaveBeenCalledWith(
+      teamConfig,
+      projectConfig,
+      expect.objectContaining({ force: true }),
+    );
+  });
+
   it('project mode: inherits user resources only when explicitly enabled', async () => {
     projectConfig.inheritUserScope = true;
     vi.mocked(detectProjectConfig).mockResolvedValue(projectConfig);
